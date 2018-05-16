@@ -25,7 +25,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
@@ -44,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity:";
     private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
-    public static final String isFirstRun = "true";
 
     private List<Song> songList = new ArrayList<>();
     private MediaPlayer mediaPlayer;
@@ -121,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+        if ((mediaPlayer != null) && mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
             mediaPlayer.release();
             mediaPlayer = null;
@@ -255,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
             public void onPrepared(MediaPlayer mp) {
                 seekBar.setMax(mp.getDuration());
                 seekBar.setProgress(0);
-                textView.setText(songList.get(index).getTitle()+"--"+songList.get(index).getArtist());
+                textView.setText(songList.get(index).getPlayText());
             }
         });
         //播放完毕
@@ -278,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
             mediaPlayer.setDataSource(songList.get(index).getData());
             mediaPlayer.prepareAsync();
         } catch (IOException e) {
-
+            e.printStackTrace();
         }
     }
 
@@ -395,11 +394,22 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public MediaPlayer getMediaPlayer() {
-        if(mediaPlayer == null){
-            mediaPlayer = new MediaPlayer();
-            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+    //记录用户首次点击返回键的时间
+    private long firstTime=0;
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        switch (keyCode){
+            case KeyEvent.KEYCODE_BACK:
+                long secondTime=System.currentTimeMillis();
+                if(secondTime-firstTime>2000){
+                    Toast.makeText(MainActivity.this,"再按一次退出程序",Toast.LENGTH_SHORT).show();
+                    firstTime=secondTime;
+                    return true;
+                }else{
+                    System.exit(0);
+                }
+                break;
         }
-        return mediaPlayer;
+        return super.onKeyUp(keyCode, event);
     }
 }
