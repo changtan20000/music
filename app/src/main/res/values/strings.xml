@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Music</string>
+
+    <string name="local">Local</string>
+    <string name="internet">Internet</string>
+    <string name="search">Search</string>
+    <string name="hint">Singer</string>
+
+    <string name="menu">This is menu</string>
+    <string name="mail">Mail</string>
+    <string name="email">changtan20000@gmail.com</string>
+    <string name="call">Call</string>
+
+    <string name="button_play">Play</string>
+    <string name="button_next">Next</string>
+
+    <string name="song_text">正在播放</string>
+
+</resources>
