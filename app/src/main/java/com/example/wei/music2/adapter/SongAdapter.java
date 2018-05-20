@@ -1,9 +1,6 @@
 package com.example.wei.music2.adapter;
 
 import android.content.Context;
-import android.content.Intent;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -13,12 +10,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.example.wei.music2.MainActivity;
 import com.example.wei.music2.R;
 import com.example.wei.music2.entity.Song;
 
-
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -64,9 +58,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.ViewHolder> im
         //将创建的View注册点击事件
         view.setOnClickListener(this);
 
-        ViewHolder holder = new ViewHolder(view);
-
-        return holder;
+        return new ViewHolder(view);
     }
 
     @Override

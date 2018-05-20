@@ -22,6 +22,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -88,23 +89,23 @@ public class MainActivity extends AppCompatActivity {
         *如果应用不具有此权限，方法将返回 PackageManager.PERMISSION_DENIED，
         * */
         if (permissionCheck == PackageManager.PERMISSION_DENIED) {
-
+            //不拥有权限，明确向用户要求权限
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     MY_PERMISSIONS_REQUEST_READ_CONTACTS);
 
-            //不拥有权限，明确向用户要求权限
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                Toast.makeText(this, "拒绝权限将无法使用程序", Toast.LENGTH_SHORT).show();
-            } else {
-
-                // No explanation needed, we can request the permission.
-
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                        MY_PERMISSIONS_REQUEST_READ_CONTACTS);
-            }
+            // shouldShowRequestPermissionRationale
+            // 方法来判断申请的权限是否需要自己定义请求权限的说明窗口
+//            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+//                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+//                Toast.makeText(this, "拒绝权限将无法使用程序", Toast.LENGTH_SHORT).show();
+//            } else {
+//
+//                // No explanation needed, we can request the permission.
+//                ActivityCompat.requestPermissions(this,
+//                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+//                        MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+//            }
         } else {
             //拥有权限
             runPlayer();
@@ -170,9 +171,10 @@ public class MainActivity extends AppCompatActivity {
         //滑动菜单页面
         navView = (NavigationView) findViewById(R.id.nav_view);
 
-        /*卡片式布局*/
+        /*滑动布局*/
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        GridLayoutManager layoutManager = new GridLayoutManager(this, 1);
+        //GridLayoutManager layoutManager = new GridLayoutManager(this, 1);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
         /*下拉刷新*/
@@ -291,9 +293,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void OnItemClick(View view, int position) {
                 index = position;
-                setPlaySong(mediaPlayer,songList.get(index).getData());
+                setPlaySong(mediaPlayer, songList.get(index).getData());
                 playButton.setImageResource(R.drawable.ic_pause_black_36dp);
-                Log.d(TAG, "OnItemClick: "+position);
+                Log.d(TAG, "OnItemClick: " + position);
             }
         });
         recyclerView.setAdapter(adapter);
@@ -395,17 +397,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //记录用户首次点击返回键的时间
-    private long firstTime=0;
+    private long firstTime = 0;
+
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        switch (keyCode){
+        switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-                long secondTime=System.currentTimeMillis();
-                if(secondTime-firstTime>2000){
-                    Toast.makeText(MainActivity.this,"再按一次退出程序",Toast.LENGTH_SHORT).show();
-                    firstTime=secondTime;
+                long secondTime = System.currentTimeMillis();
+                if (secondTime - firstTime > 2000) {
+                    Toast.makeText(MainActivity.this, "再按一次退出程序", Toast.LENGTH_SHORT).show();
+                    firstTime = secondTime;
                     return true;
-                }else{
+                } else {
                     System.exit(0);
                 }
                 break;
