@@ -44,11 +44,12 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity:";
-    private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
+    private static final int MY_PERMISSIONS_REQUEST = 1;
 
     private List<Song> songList = new ArrayList<>();
     private MediaPlayer mediaPlayer;
     private SongAdapter adapter;
+    //歌曲列表索引
     private int index = 0;
 
     private SeekBar seekBar;
@@ -90,10 +91,6 @@ public class MainActivity extends AppCompatActivity {
         * */
         if (permissionCheck == PackageManager.PERMISSION_DENIED) {
             //不拥有权限，明确向用户要求权限
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_REQUEST_READ_CONTACTS);
-
             // shouldShowRequestPermissionRationale
             // 方法来判断申请的权限是否需要自己定义请求权限的说明窗口
 //            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
@@ -106,6 +103,9 @@ public class MainActivity extends AppCompatActivity {
 //                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
 //                        MY_PERMISSIONS_REQUEST_READ_CONTACTS);
 //            }
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST);
         } else {
             //拥有权限
             runPlayer();
@@ -121,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        //活动结束时释放资源
         if ((mediaPlayer != null) && mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
             mediaPlayer.release();
@@ -132,9 +133,9 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
+        //对用户授权结果进行处理
         switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_READ_CONTACTS:
+            case MY_PERMISSIONS_REQUEST:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager
                         .PERMISSION_GRANTED) {
                     // 权限被批准
@@ -191,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initListener() {
-        //滑动菜单页面
+        //滑动菜单页面，点击菜单项时的处理
         navView.setNavigationItemSelectedListener(new NavigationView
                 .OnNavigationItemSelectedListener() {
             @Override
@@ -210,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //seekBar
+        //seekBar，设置播放进度
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             @Override
@@ -287,8 +288,13 @@ public class MainActivity extends AppCompatActivity {
         //强制系统更新媒体数据库
         MediaScannerConnection.scanFile(this, new String[]{Environment
                 .getExternalStorageDirectory().getAbsolutePath()}, null, null);
+
         songList = findSongs();
         adapter = new SongAdapter(songList);
+        //把歌曲信息填充到滑动列表
+        recyclerView.setAdapter(adapter);
+
+        //列表点击处理，需要自己实现
         adapter.setOnItemClickListener(new SongAdapter.OnItemClickListener() {
             @Override
             public void OnItemClick(View view, int position) {
@@ -298,7 +304,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "OnItemClick: " + position);
             }
         });
-        recyclerView.setAdapter(adapter);
     }
 
     private void setPlaySong(MediaPlayer mPlayer, String songPath) {
@@ -306,17 +311,19 @@ public class MainActivity extends AppCompatActivity {
             mPlayer.stop();
             mPlayer.reset();
             mPlayer.setDataSource(getBaseContext(), Uri.parse(songPath));
-            mPlayer.prepare();
+            mPlayer.prepareAsync();
             mPlayer.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    // 查询数据库中的所有歌曲信息
     private List<Song> findSongs() {
 
         List<Song> songList = new ArrayList<>();
 
+        //需要查询的列
         String[] projection = {
                 MediaStore.Audio.Media.DATA,
                 MediaStore.Audio.Media.DISPLAY_NAME,
@@ -325,31 +332,30 @@ public class MainActivity extends AppCompatActivity {
                 MediaStore.Audio.Media.ARTIST,
                 MediaStore.Audio.Media.DURATION
         };
-        ContentResolver resolver = getApplication().getContentResolver();
 
-        // 获取所有歌曲
+        //查询数据库
+        ContentResolver resolver = getApplication().getContentResolver();
         Cursor cursor = resolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 projection, null, null, MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
+        //遍历游标
         if (cursor != null) {
             while (cursor.moveToNext()) {
-
+                //把查询到的数据封装到实体类，并添加到List集合
                 Song song = new Song();
-
                 song.setData(cursor.getString(0));
                 song.setDisplay_name(cursor.getString(1));
                 song.setSize(cursor.getInt(2));
                 song.setTitle(cursor.getString(3));
                 song.setArtist(cursor.getString(4));
                 song.setDuration(cursor.getInt(5));
-
                 songList.add(song);
-
             }
             cursor.close();
         }
         return songList;
     }
 
+    //刷新事件处理
     private void refreshSongs() {
         new Thread(new Runnable() {
             @Override
@@ -362,6 +368,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        //重新读取数据库数据，并填充到滑动列表
                         songList = findSongs();
                         adapter.notifyDataSetChanged();
                         swipeRefresh.setRefreshing(false);
@@ -371,9 +378,11 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    //菜单栏点击事件
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            //向上菜单点击处理
             case android.R.id.home:
                 drawerLayout.openDrawer(GravityCompat.START);
                 break;
@@ -382,8 +391,8 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    //隔1秒钟更新播放进度
     private void updateTime() {
-
         final Handler handler = new Handler();
         handler.post(new Runnable() {
             @Override
@@ -399,6 +408,7 @@ public class MainActivity extends AppCompatActivity {
     //记录用户首次点击返回键的时间
     private long firstTime = 0;
 
+    //双击结束程序，对点击返回键进行处理
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         switch (keyCode) {

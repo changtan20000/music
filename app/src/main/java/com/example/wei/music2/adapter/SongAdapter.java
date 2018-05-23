@@ -16,6 +16,7 @@ import com.example.wei.music2.entity.Song;
 import java.util.List;
 
 /**
+ * 自定义适配器
  * Created by WEI on 2018/5/15.
  */
 
@@ -25,18 +26,19 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.ViewHolder> im
 
     private List<Song> songList;
 
-    private OnItemClickListener mOnItemClickListener = null;
-
+    //自定义接口
     public static interface OnItemClickListener{
         void OnItemClick(View view ,int position);
     }
-
+    private OnItemClickListener mOnItemClickListener = null;
+    public void setOnItemClickListener(OnItemClickListener listener){
+        this.mOnItemClickListener = listener;
+    }
     //自定义的ViewHolder，持有每个Item的的所有界面元素
     public static class ViewHolder extends RecyclerView.ViewHolder {
         CardView cardView;
         ImageView imageView;
         TextView textView;
-
         public ViewHolder(View itemView) {
             super(itemView);
             cardView = (CardView) itemView;
@@ -55,7 +57,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.ViewHolder> im
             context = parent.getContext();
         }
         View view = LayoutInflater.from(context).inflate(R.layout.song_item, parent, false);
-        //将创建的View注册点击事件
+        //为创建的View注册点击事件
         view.setOnClickListener(this);
 
         return new ViewHolder(view);
@@ -75,12 +77,9 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.ViewHolder> im
     public void onClick(View v) {
         if(mOnItemClickListener!=null){
             //注意这里使用getTag方法获取position
+            //子项被点击时调用自定义接口的方法
             mOnItemClickListener.OnItemClick(v,(int)v.getTag());
         }
-    }
-
-    public void setOnItemClickListener(OnItemClickListener listener){
-        this.mOnItemClickListener = listener;
     }
     //获取数据的数量
     @Override
